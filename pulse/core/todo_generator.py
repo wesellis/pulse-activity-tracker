@@ -35,8 +35,23 @@ class TodoGenerator:
             self._generate_continuation_todos,
             self._generate_pattern_based_todos,
             self._generate_context_aware_todos,
-            self._generate_schedule_based_todos
+            self._generate_schedule_based_todos,
+            self._generate_break_reminders,
+            self._generate_health_todos,
+            self._generate_project_todos,
+            self._generate_distraction_todos
         ]
+        
+        # Break tracking
+        self.last_break_time = datetime.now()
+        self.continuous_work_time = 0
+        
+        # Productivity thresholds
+        self.productivity_thresholds = {
+            'high': 80,
+            'medium': 50,
+            'low': 30
+        }
     
     async def generate_suggestions(self, activity_data: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Generate todo suggestions based on current activity"""
@@ -240,6 +255,256 @@ class TodoGenerator:
                 'category': 'planning',
                 'confidence': 0.9,
                 'source': 'schedule_pattern'
+            })
+        
+        return suggestions
+    
+    async def _generate_break_reminders(self, activity_data: Dict[str, Any]) -> List[Dict]:
+        """Generate break reminders based on continuous work time"""
+        suggestions = []
+        
+        # Check session duration
+        session_data = activity_data.get('session_data', {})
+        session_start = session_data.get('start_time')
+        
+        if session_start:
+            # Calculate continuous work time
+            if isinstance(session_start, str):
+                session_start = datetime.fromisoformat(session_start.replace('Z', '+00:00'))
+            elif hasattr(session_start, 'isoformat'):
+                pass  # Already datetime
+            else:
+                return suggestions
+            
+            work_duration = (datetime.now() - session_start).total_seconds() / 60
+            
+            # Check idle periods
+            idle_periods = session_data.get('idle_periods', [])
+            recent_break = False
+            for period in idle_periods:
+                if (datetime.now() - period.get('start', datetime.min)).total_seconds() < 1800:  # 30 min
+                    recent_break = True
+                    break
+            
+            if not recent_break:
+                if work_duration > 90:  # 90 minutes continuous work
+                    suggestions.append({
+                        'title': '🚨 Take a mandatory break',
+                        'description': 'You\'ve been working for over 90 minutes. Stand up, stretch, and rest your eyes for 10-15 minutes.',
+                        'priority': 'urgent',
+                        'category': 'health',
+                        'confidence': 0.95,
+                        'source': 'break_reminder',
+                        'estimated_minutes': 15
+                    })
+                elif work_duration > 60:  # 60 minutes
+                    suggestions.append({
+                        'title': 'Time for a short break',
+                        'description': 'You\'ve been focused for an hour. Take a 5-10 minute break to maintain productivity.',
+                        'priority': 'high',
+                        'category': 'health',
+                        'confidence': 0.85,
+                        'source': 'break_reminder',
+                        'estimated_minutes': 10
+                    })
+                elif work_duration > 25:  # Pomodoro interval
+                    suggestions.append({
+                        'title': 'Pomodoro break time',
+                        'description': 'Complete your 25-minute focus session with a 5-minute break.',
+                        'priority': 'medium',
+                        'category': 'health',
+                        'confidence': 0.7,
+                        'source': 'break_reminder',
+                        'estimated_minutes': 5
+                    })
+        
+        return suggestions
+    
+    async def _generate_health_todos(self, activity_data: Dict[str, Any]) -> List[Dict]:
+        """Generate health and wellness related todos"""
+        suggestions = []
+        current_time = datetime.now()
+        hour = current_time.hour
+        
+        # Hydration reminder
+        if hour % 2 == 0:  # Every 2 hours
+            suggestions.append({
+                'title': 'Stay hydrated 💧',
+                'description': 'Drink a glass of water to maintain hydration and focus.',
+                'priority': 'low',
+                'category': 'health',
+                'confidence': 0.6,
+                'source': 'health_reminder',
+                'estimated_minutes': 2
+            })
+        
+        # Eye rest reminder
+        productivity_indicators = activity_data.get('productivity_indicators', {})
+        screen_time = productivity_indicators.get('active_time_minutes', 0)
+        
+        if screen_time > 120:  # 2 hours of screen time
+            suggestions.append({
+                'title': 'Rest your eyes (20-20-20 rule)',
+                'description': 'Look at something 20 feet away for 20 seconds to reduce eye strain.',
+                'priority': 'medium',
+                'category': 'health',
+                'confidence': 0.8,
+                'source': 'health_reminder',
+                'estimated_minutes': 1
+            })
+        
+        # Posture check
+        if hour in [10, 14, 16]:  # Specific times for posture checks
+            suggestions.append({
+                'title': 'Check your posture',
+                'description': 'Adjust your sitting position, straighten your back, and relax your shoulders.',
+                'priority': 'low',
+                'category': 'health',
+                'confidence': 0.5,
+                'source': 'health_reminder',
+                'estimated_minutes': 1
+            })
+        
+        # Lunch reminder
+        if 12 <= hour <= 13 and current_time.minute < 30:
+            suggestions.append({
+                'title': 'Take a lunch break',
+                'description': 'Step away from work and have a proper meal.',
+                'priority': 'high',
+                'category': 'health',
+                'confidence': 0.9,
+                'source': 'health_reminder',
+                'estimated_minutes': 30
+            })
+        
+        return suggestions
+    
+    async def _generate_project_todos(self, activity_data: Dict[str, Any]) -> List[Dict]:
+        """Generate project-specific todos based on recent activity"""
+        suggestions = []
+        
+        # Analyze recent applications and files
+        session_data = activity_data.get('session_data', {})
+        applications = session_data.get('applications', {})
+        
+        # Git-related todos
+        if any('git' in app.lower() or 'sourcetree' in app.lower() for app in applications):
+            suggestions.append({
+                'title': 'Commit your changes',
+                'description': 'Review and commit pending changes to version control.',
+                'priority': 'high',
+                'category': 'development',
+                'confidence': 0.8,
+                'source': 'project_pattern',
+                'estimated_minutes': 10
+            })
+        
+        # Testing todos
+        if any('test' in app.lower() or 'pytest' in app.lower() for app in applications):
+            suggestions.append({
+                'title': 'Run test suite',
+                'description': 'Execute tests to ensure code quality before pushing.',
+                'priority': 'high',
+                'category': 'development',
+                'confidence': 0.75,
+                'source': 'project_pattern',
+                'estimated_minutes': 15
+            })
+        
+        # Documentation todos
+        productivity_indicators = activity_data.get('productivity_indicators', {})
+        category_breakdown = productivity_indicators.get('category_breakdown', {})
+        
+        if category_breakdown.get('development', 0) > 60:  # Over 60 min of development
+            suggestions.append({
+                'title': 'Update documentation',
+                'description': 'Document recent code changes and update README if needed.',
+                'priority': 'medium',
+                'category': 'documentation',
+                'confidence': 0.7,
+                'source': 'project_pattern',
+                'estimated_minutes': 20
+            })
+        
+        # Code review
+        if 'github' in ' '.join(applications).lower() or 'gitlab' in ' '.join(applications).lower():
+            suggestions.append({
+                'title': 'Review pull requests',
+                'description': 'Check and review pending pull requests from team members.',
+                'priority': 'medium',
+                'category': 'collaboration',
+                'confidence': 0.65,
+                'source': 'project_pattern',
+                'estimated_minutes': 30
+            })
+        
+        return suggestions
+    
+    async def _generate_distraction_todos(self, activity_data: Dict[str, Any]) -> List[Dict]:
+        """Generate todos to handle distractions and improve focus"""
+        suggestions = []
+        
+        productivity_indicators = activity_data.get('productivity_indicators', {})
+        distraction_score = productivity_indicators.get('distraction_score', 0)
+        focus_score = productivity_indicators.get('focus_score', 100)
+        
+        # High distraction detected
+        if distraction_score > 30:
+            suggestions.append({
+                'title': 'Minimize distractions',
+                'description': 'Close social media tabs, silence notifications, and focus on one task.',
+                'priority': 'high',
+                'category': 'focus',
+                'confidence': 0.85,
+                'source': 'distraction_analysis',
+                'estimated_minutes': 5
+            })
+            
+            suggestions.append({
+                'title': 'Use website blocker',
+                'description': 'Enable website blocker for distracting sites for the next 2 hours.',
+                'priority': 'medium',
+                'category': 'focus',
+                'confidence': 0.7,
+                'source': 'distraction_analysis',
+                'estimated_minutes': 2
+            })
+        
+        # Low focus score
+        if focus_score < 50:
+            suggestions.append({
+                'title': 'Try the Pomodoro Technique',
+                'description': 'Work in focused 25-minute intervals with short breaks.',
+                'priority': 'medium',
+                'category': 'productivity',
+                'confidence': 0.75,
+                'source': 'focus_improvement',
+                'estimated_minutes': 25
+            })
+            
+            suggestions.append({
+                'title': 'Create a focused work session',
+                'description': 'Set a specific goal for the next hour and work without interruptions.',
+                'priority': 'high',
+                'category': 'productivity',
+                'confidence': 0.8,
+                'source': 'focus_improvement',
+                'estimated_minutes': 60
+            })
+        
+        # App switching detection
+        session_data = activity_data.get('session_data', {})
+        app_count = len(session_data.get('applications', {}))
+        
+        if app_count > 15:
+            suggestions.append({
+                'title': 'Close unnecessary applications',
+                'description': f'You have {app_count} applications open. Close unused ones to improve system performance and focus.',
+                'priority': 'medium',
+                'category': 'focus',
+                'confidence': 0.8,
+                'source': 'resource_optimization',
+                'estimated_minutes': 5
             })
         
         return suggestions

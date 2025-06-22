@@ -1,0 +1,74 @@
+{
+  "metadata": {
+    "last_updated": "2025-06-22T01:27:28.072066",
+    "version": "1.0"
+  },
+  "settings": {
+    "privacy": {
+      "privacy_mode": false,
+      "blocked_apps": [],
+      "incognito_keywords": [
+        "private",
+        "incognito",
+        "password",
+        "banking"
+      ],
+      "track_browser_history": true,
+      "track_file_access": true,
+      "track_websites": true
+    },
+    "productivity": {
+      "work_hours_start": 9,
+      "work_hours_end": 17,
+      "break_reminder_interval": 3600,
+      "productivity_threshold_low": 30,
+      "productivity_threshold_high": 80,
+      "idle_threshold_seconds": 300
+    },
+    "notifications": {
+      "enable_notifications": true,
+      "break_notifications": true,
+      "productivity_alerts": true,
+      "desktop_notifications": true,
+      "sound_enabled": false
+    },
+    "focus_modes": {
+      "pomodoro_enabled": true,
+      "pomodoro_work_minutes": 25,
+      "pomodoro_break_minutes": 5,
+      "deep_work_minutes": 90,
+      "focus_mode_blocks_distractions": true
+    },
+    "health": {
+      "hydration_reminders": true,
+      "hydration_interval_hours": 2,
+      "eye_rest_reminders": true,
+      "eye_rest_interval_hours": 1,
+      "posture_reminders": true,
+      "posture_interval_hours": 2,
+      "movement_reminders": true
+    },
+    "reports": {
+      "auto_generate_daily": true,
+      "auto_generate_weekly": true,
+      "include_productivity_score": true,
+      "include_category_breakdown": true,
+      "include_health_metrics": true,
+      "export_format": "json"
+    },
+    "ui": {
+      "theme": "light",
+      "compact_mode": false,
+      "show_notifications_in_tray": true,
+      "minimize_to_tray": true,
+      "start_minimized": false
+    },
+    "advanced": {
+      "monitoring_interval": 30,
+      "data_retention_days": 90,
+      "auto_backup": true,
+      "backup_interval_hours": 24,
+      "debug_mode": false
+    }
+  }
+}

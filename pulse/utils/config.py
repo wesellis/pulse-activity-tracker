@@ -47,6 +47,36 @@ class Config:
         self.anthropic_api_key = os.getenv('ANTHROPIC_API_KEY', '')
         self.use_ai_suggestions = os.getenv('USE_AI_SUGGESTIONS', 'false').lower() == 'true'
         
+        # Productivity thresholds
+        self.break_reminder_interval = int(os.getenv('BREAK_REMINDER_INTERVAL', '3600'))
+        self.idle_threshold_seconds = int(os.getenv('IDLE_THRESHOLD_SECONDS', '300'))
+        self.productivity_threshold_low = int(os.getenv('PRODUCTIVITY_THRESHOLD_LOW', '30'))
+        self.productivity_threshold_high = int(os.getenv('PRODUCTIVITY_THRESHOLD_HIGH', '80'))
+        
+        # Privacy mode
+        self.privacy_mode = os.getenv('PRIVACY_MODE', 'false').lower() == 'true'
+        
+        # Notifications
+        self.enable_notifications = os.getenv('ENABLE_NOTIFICATIONS', 'true').lower() == 'true'
+        self.break_notifications = os.getenv('BREAK_NOTIFICATIONS', 'true').lower() == 'true'
+        self.productivity_alerts = os.getenv('PRODUCTIVITY_ALERTS', 'true').lower() == 'true'
+        
+        # Backup settings
+        self.auto_backup = os.getenv('AUTO_BACKUP', 'true').lower() == 'true'
+        self.backup_interval_hours = int(os.getenv('BACKUP_INTERVAL_HOURS', '24'))
+        self.max_backups = int(os.getenv('MAX_BACKUPS', '7'))
+        self.backup_to_cloud = os.getenv('BACKUP_TO_CLOUD', 'false').lower() == 'true'
+        
+        # Focus modes
+        self.pomodoro_work_minutes = int(os.getenv('POMODORO_WORK_MINUTES', '25'))
+        self.pomodoro_break_minutes = int(os.getenv('POMODORO_BREAK_MINUTES', '5'))
+        self.deep_work_minutes = int(os.getenv('DEEP_WORK_MINUTES', '90'))
+        
+        # Health reminders
+        self.hydration_reminder_hours = int(os.getenv('HYDRATION_REMINDER_HOURS', '2'))
+        self.eye_rest_reminder_hours = int(os.getenv('EYE_REST_REMINDER_HOURS', '1'))
+        self.posture_check_hours = int(os.getenv('POSTURE_CHECK_HOURS', '2'))
+        
         # Reporting settings
         self.auto_generate_reports = os.getenv('AUTO_GENERATE_REPORTS', 'true').lower() == 'true'
         self.report_email = os.getenv('REPORT_EMAIL', '')
@@ -160,6 +190,59 @@ class Config:
             'send_daily_reports': self.send_daily_reports,
             'report_email_configured': bool(self.report_email)
         }
+    
+    def get_productivity_settings(self) -> Dict[str, Any]:
+        """Get productivity thresholds and settings"""
+        return {
+            'break_reminder_interval': self.break_reminder_interval,
+            'idle_threshold_seconds': self.idle_threshold_seconds,
+            'productivity_threshold_low': self.productivity_threshold_low,
+            'productivity_threshold_high': self.productivity_threshold_high,
+            'pomodoro_work_minutes': self.pomodoro_work_minutes,
+            'pomodoro_break_minutes': self.pomodoro_break_minutes,
+            'deep_work_minutes': self.deep_work_minutes
+        }
+    
+    def get_notification_settings(self) -> Dict[str, bool]:
+        """Get notification preferences"""
+        return {
+            'enable_notifications': self.enable_notifications,
+            'break_notifications': self.break_notifications,
+            'productivity_alerts': self.productivity_alerts
+        }
+    
+    def get_health_settings(self) -> Dict[str, int]:
+        """Get health reminder settings"""
+        return {
+            'hydration_reminder_hours': self.hydration_reminder_hours,
+            'eye_rest_reminder_hours': self.eye_rest_reminder_hours,
+            'posture_check_hours': self.posture_check_hours
+        }
+    
+    def get_backup_settings(self) -> Dict[str, Any]:
+        """Get backup configuration"""
+        return {
+            'auto_backup': self.auto_backup,
+            'backup_interval_hours': self.backup_interval_hours,
+            'max_backups': self.max_backups,
+            'backup_to_cloud': self.backup_to_cloud
+        }
+    
+    def is_privacy_mode(self) -> bool:
+        """Check if privacy mode is enabled"""
+        return self.privacy_mode
+    
+    def should_notify(self, notification_type: str) -> bool:
+        """Check if specific notification type is enabled"""
+        if not self.enable_notifications:
+            return False
+        
+        notification_map = {
+            'break': self.break_notifications,
+            'productivity': self.productivity_alerts
+        }
+        
+        return notification_map.get(notification_type, True)
     
     def update_setting(self, key: str, value: Any) -> bool:
         """Update a configuration setting"""

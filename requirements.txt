@@ -1,0 +1,40 @@
+# Core requirements for activity tracking and analysis
+psutil>=5.9.0              # System and process monitoring
+pygetwindow>=0.0.9         # Window management and tracking
+pynput>=1.7.6              # Keyboard and mouse monitoring
+watchdog>=3.0.0            # File system monitoring
+
+# Web framework and API
+fastapi>=0.104.0           # Modern web framework
+uvicorn>=0.24.0           # ASGI server
+pydantic>=2.5.0           # Data validation
+
+# Database
+sqlalchemy>=2.0.0          # Database ORM
+alembic>=1.13.0           # Database migrations
+sqlite3                   # Built into Python
+
+# Data analysis and ML
+pandas>=2.1.0             # Data manipulation
+scikit-learn>=1.3.0       # Machine learning
+numpy>=1.24.0             # Numerical computing
+
+# Web scraping and browser integration
+beautifulsoup4>=4.12.0    # HTML parsing
+requests>=2.31.0          # HTTP client
+
+# Utilities
+python-dotenv>=1.0.0      # Environment variables
+schedule>=1.2.0           # Task scheduling
+click>=8.1.0              # CLI interface
+rich>=13.7.0              # Pretty terminal output
+
+# Optional: AI integration
+openai>=1.3.0             # OpenAI API (optional)
+anthropic>=0.7.0          # Claude API (optional)
+
+# Development dependencies
+pytest>=7.4.0            # Testing framework
+black>=23.11.0           # Code formatting
+flake8>=6.1.0            # Linting
+mypy>=1.7.0              # Type checking

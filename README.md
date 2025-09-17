@@ -181,7 +181,7 @@ python main.py
 - **Project Management**: Jira, Asana, Linear integration
 - **Mobile Sync**: Cross-platform todo synchronization
 
-## Time Savings
+## Efficiency Benefits
 
 - **Manual time tracking** - 15-30 minutes daily
 - **With Pulse** - 0-2 minutes daily (just review suggestions)
